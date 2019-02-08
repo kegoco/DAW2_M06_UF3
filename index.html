@@ -12,6 +12,7 @@
             .contenedor-general {
                 margin: 0 auto;
                 width: 100%;
+                margin-bottom: 20%;
             }
 
             .contenedor-creador {
@@ -26,6 +27,26 @@
             h1 {
                 color: white;
                 font-size: 22px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            h3 {
+                color: white;
+                font-size: 18px;
+                margin-bottom: 10px;
+            }
+            h4 {
+                color: white;
+                font-size: 16px;
+                margin-bottom: 5px;
+            }
+
+            .btn {
+                padding: 1%;
+                cursor: pointer;
+                user-select: none;
+                border-radius: 5px;
+                border: 1px solid lightslategray;
             }
 
             .btn-circle {
@@ -46,8 +67,49 @@
                 color: white;
             }
 
+            .btn-aceptar {
+                background-color: #4c7777;
+                color: white;
+            }
+            .btn-aceptar:active {
+                background-color: #2F4F4F;
+            }
+
             .contenedor-formularios {
-                
+                display: flex;
+                flex-wrap: wrap;
+                padding: 1%;
+            }
+
+            .grupo-formulario {
+                width: 200px;
+                height: 200px;
+                box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+                margin-right: 15px;
+                margin-bottom: 15px;
+            }
+
+            /* MODAL */
+            .modal {
+                display: none; /* Hidden by default */
+                position: fixed; /* Stay in place */
+                z-index: 1; /* Sit on top */
+                padding-top: 100px; /* Location of the box */
+                left: 0;
+                top: 0;
+                width: 100%; /* Full width */
+                height: 100%; /* Full height */
+                overflow: auto; /* Enable scroll if needed */
+                background-color: rgb(0,0,0); /* Fallback color */
+                background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            }
+
+            .modal-body {
+                background-color: #fefefe;
+                margin: auto;
+                padding: 20px;
+                border: 1px solid #888;
+                width: 50%;
             }
         </style>
     </head>
@@ -55,65 +117,78 @@
     <body>
         <div class="contenedor-general">
             <!-- CONTENEDOR DE FORMULARIOS -->
-            <div class="contenedor-formularios">
-                <div>
-                    Prueba 1
-                </div>
-
-                <div>
-                    Prueba 2
-                </div>
-            </div>
+            <div class="contenedor-formularios"></div>
 
             <!-- FORMULARIO PARA CREAR FORMULARIOS -->
             <div class="contenedor-creador">
                 <h1>¡Crea tu formulario personalizado!</h1>
-                <i class="btn-circle" onclick="fm.crearFormulario()">+</i>
+                <div>
+                    <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.crearFormulario()">+</i>
+                    <h4>Nombre del formulario:</h4>
+                    <input id="cf-nombre" type="text">
+                </div>
+                
+                
+            </div>
+
+            <!-- MODAL DE ERROR -->
+            <div id="modal" class="modal">
+                <div class="modal-body">
+                    <h3 style="color: red;">ERROR</h3>
+                    <p id="mensaje-error"></p>
+                    <br><br>
+                    <a class="btn btn-aceptar" onclick="fm.cerrarModal()">Aceptar</a>
+                </div>
             </div>
         </div>
     </body>
 
     <script>
         var fm = this;
+        fm.contenedorFormularios = undefined;
+        fm.formularios = {};
 
-        fm.crearFormulario = function () {
-            console.log("Hola");
+        function inicializar() {
+            console.log('::: Aplicación inicializada :::');
+            fm.contenedorFormularios = $('.contenedor-formularios')[0];
         }
 
-        // var ex1 = this;
+        fm.crearFormulario = function () {
+            let cfNombre = $('#cf-nombre').val();
+            if (fm.existeFormulario(cfNombre) == false && cfNombre != '') {
+                // Exito
+                let div   = document.createElement('div');
+                let texto = document.createTextNode(cfNombre);
 
-        // /**
-        //  *  @description Genera una tabla con la cantidad de filas y columnas especificadas en el input "cantidad-tabla".
-        //  */
-        // $('#generar-tabla').click(function () {
-        //     ex1.limpiarContenedor();
+                div.setAttribute('id', cfNombre);
+                div.setAttribute('class', 'grupo-formulario');
+                div.appendChild(texto);
+                fm.contenedorFormularios.appendChild(div);
 
-        //     let cantidad   = parseInt($('#cantidad-tabla').val());
-        //     let contenedor = $('#contenedor')[0];
-        //     let tabla      = document.createElement('table');
+                fm.formularios[cfNombre] = {};
+                console.log(fm.formularios);
+            }
+            else if (cfNombre == '') {
+                // Error
+                $('#mensaje-error').text('Para crear un formulario hay que especificar un nombre válido.');
+                $('#modal').css('display', 'block');
+            }
+            else {
+                // Error
+                $('#mensaje-error').text('Ya existe un formulario llamado: ' + cfNombre + '.');
+                $('#modal').css('display', 'block');
+            }
+        }
 
-        //     for (let x = 0; x < cantidad; x++) {
-        //         let tr = document.createElement('tr');
+        fm.existeFormulario = function (nombre) {
+            return fm.formularios.hasOwnProperty(nombre);
+        }
 
-        //         for (let y = 0; y < cantidad; y++) {
-        //             let td    = document.createElement('td');
-        //             let texto = document.createTextNode(x + '-' + y);
+        fm.cerrarModal = function () {
+            $('#modal').css('display', 'none');
+        }
 
-        //             td.appendChild(texto);
-        //             tr.appendChild(td);
-        //         }
+        inicializar();
 
-        //         tabla.appendChild(tr);
-        //     }
-
-        //     contenedor.appendChild(tabla);
-        // });
-
-        // /**
-        //  *  @description Borra todo el contenido del contenedor.
-        //  */
-        // ex1.limpiarContenedor = function () {
-        //     $('#contenedor').empty();
-        // }
     </script>
 </html>
