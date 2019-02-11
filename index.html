@@ -30,6 +30,12 @@
                 font-weight: bold;
                 margin-bottom: 10px;
             }
+            h2 {
+                color: black;
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
             h3 {
                 color: white;
                 font-size: 18px;
@@ -75,6 +81,14 @@
                 background-color: #2F4F4F;
             }
 
+            .btn-cancelar {
+                background-color: rgb(211, 62, 62);
+                color: white;
+            }
+            .btn-cancelar:active {
+                background-color: rgb(230, 19, 19);
+            }
+
             .contenedor-formularios {
                 display: flex;
                 flex-wrap: wrap;
@@ -111,6 +125,39 @@
                 border: 1px solid #888;
                 width: 50%;
             }
+
+            fieldset { 
+                border:1px solid white;
+            }
+
+            legend {
+                padding: 1%;
+                color:white;
+                font-size: 90%;
+                text-align: left;
+                margin-left: 10px;
+            }
+
+            /* GRIDS FOOTER */
+            .grid-container {
+                display: grid;
+                grid-template-columns: auto auto auto;
+                padding: 1%;
+            }
+            .grid-item {
+                padding: 2%;
+                font-size: 30px;
+            }
+
+            ul {
+                list-style-type: decimal;
+                color: white;
+                font-size: 16px;
+            }
+
+            label {
+                font-size: 16px;
+            }
         </style>
     </head>
 
@@ -121,14 +168,63 @@
 
             <!-- FORMULARIO PARA CREAR FORMULARIOS -->
             <div class="contenedor-creador">
-                <h1>¡Crea tu formulario personalizado!</h1>
-                <div>
-                    <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.crearFormulario()">+</i>
-                    <h4>Nombre del formulario:</h4>
-                    <input id="cf-nombre" type="text">
+                <fieldset class="" style="width: 23%; float: left;">
+                    <legend>
+                        <h1>¡Crea tu formulario personalizado!</h1>
+                    </legend>
+                    <div>
+                        <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.crearFormulario()">+</i>
+                        <h4>Nombre del formulario:</h4>
+                        <input id="cf-nombre" type="text">
+                    </div>
+                </fieldset>
+                
+                <fieldset class="" style="width: 50%; float: left;">
+                    <legend>
+                        <h1>Formulario: <span id="formulario-seleccionado"></span></h1>
+                    </legend>
+                    <div>
+                        <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.abrirCrearCampo()">+</i>
+                        <!-- <label for="campo-nombre">Especifica el nombre del campo:</label>
+                        <input id="campo-nombre" type="text" name="campo-nombre">
+                        <br>
+                        <select id="campo-tipo" name="campo-tipo">
+                            <option value="text">Texto</option>
+                        </select> -->
+                    </div>
+                </fieldset>
+                
+                <fieldset class="" style="width: 23%; float: left;">
+                    <legend>
+                        <h1>Formularios creados</h1>
+                    </legend>
+                    <div style="overflow: scroll; max-width: 100%; min-height: 60%; max-height: 60%;">
+                        <ul id="lf-contenedor"></ul>
+                    </div>
+                </fieldset>
+            </div>
+
+            <!-- MODAL DE CREAR -->
+            <div id="modal-crear" class="modal">
+                <div class="modal-body">
+                    <h3 style="color: black;">CREAR CAMPO</h3>
+                    <label>Introduce el nombre del campo: </label>
+                    <input id="campo-nombre" type="text">
+                    <br><br>
+                    <label>Selecciona el campo: </label>
+                    <select id="campo-val" name="campo-tipo">
+                        <option value="input">Input</option>
+                    </select> 
+                    <br><br>
+                    <label>Selecciona el tipo de campo: </label>
+                    <select id="campo-tipo" name="campo-tipo">
+                        <option value="text">Texto</option>
+                        <option value="number">Número</option>
+                    </select> 
+                    <br><br>
+                    <a class="btn btn-aceptar" onclick="fm.crearCampo()">Crear</a>
+                    <a class="btn btn-cancelar" onclick="fm.cerrarModal('#modal-crear')">Cancelar</a>
                 </div>
-                
-                
             </div>
 
             <!-- MODAL DE ERROR -->
@@ -137,7 +233,7 @@
                     <h3 style="color: red;">ERROR</h3>
                     <p id="mensaje-error"></p>
                     <br><br>
-                    <a class="btn btn-aceptar" onclick="fm.cerrarModal()">Aceptar</a>
+                    <a class="btn btn-aceptar" onclick="fm.cerrarModal('#modal')">Aceptar</a>
                 </div>
             </div>
         </div>
@@ -147,6 +243,7 @@
         var fm = this;
         fm.contenedorFormularios = undefined;
         fm.formularios = {};
+        fm.formularioSeleccionado = '';
 
         function inicializar() {
             console.log('::: Aplicación inicializada :::');
@@ -158,14 +255,17 @@
             if (fm.existeFormulario(cfNombre) == false && cfNombre != '') {
                 // Exito
                 let div   = document.createElement('div');
+                let h2    = document.createElement('h2');
                 let texto = document.createTextNode(cfNombre);
 
                 div.setAttribute('id', cfNombre);
                 div.setAttribute('class', 'grupo-formulario');
-                div.appendChild(texto);
+                h2.appendChild(texto);
+                div.appendChild(h2);
                 fm.contenedorFormularios.appendChild(div);
 
                 fm.formularios[cfNombre] = {};
+                fm.incrementarListado(cfNombre);
                 console.log(fm.formularios);
             }
             else if (cfNombre == '') {
@@ -180,12 +280,45 @@
             }
         }
 
+        fm.incrementarListado = function (nuevoFormulario) {
+            let li = document.createElement('li');
+            let texto = document.createTextNode(nuevoFormulario);
+
+            li.appendChild(texto);
+            li.setAttribute('onclick', 'fm.seleccionarFormulario("' + nuevoFormulario +'")');
+            $('#lf-contenedor')[0].appendChild(li);
+        }
+
+        fm.seleccionarFormulario = function (formulario) {
+            fm.formularioSeleccionado = formulario;
+            $('#formulario-seleccionado').text(formulario);
+        }
+
+        fm.abrirCrearCampo = function () {
+            $('#modal-crear').css('display', 'block');
+        }
+
+        fm.crearCampo = function () {
+            let _nombre = $('#campo-nombre').val();
+            let _campo = $('#campo-val').val();
+            let _tipo = $('#campo-tipo').val();
+
+            let label = document.createElement('label');
+            let label_texto = document.createTextNode(_nombre);
+            let campo = document.createElement(_campo);
+            campo.setAttribute('type', _tipo);
+
+            label.appendChild(label_texto);
+            $('#' + fm.formularioSeleccionado)[0].appendChild(label);
+            $('#' + fm.formularioSeleccionado)[0].appendChild(campo);
+        }
+
         fm.existeFormulario = function (nombre) {
             return fm.formularios.hasOwnProperty(nombre);
         }
 
-        fm.cerrarModal = function () {
-            $('#modal').css('display', 'none');
+        fm.cerrarModal = function (idModal) {
+            $(idModal).css('display', 'none');
         }
 
         inicializar();
