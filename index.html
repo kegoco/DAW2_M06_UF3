@@ -72,6 +72,24 @@
                 background-color: #6495ED;
                 color: white;
             }
+            
+            .btn-circle-select {
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                background-color: #4c7777;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                font-weight: bold;
+                font-size: 20px;
+                cursor: pointer;
+                user-select: none;
+            }
+            .btn-circle-select:active {
+                background-color: #2F4F4F;
+                color: white;
+            }
 
             .btn-aceptar {
                 background-color: #4c7777;
@@ -158,6 +176,10 @@
             label {
                 font-size: 16px;
             }
+
+            .cursor {
+                cursor: pointer;
+            }
         </style>
     </head>
 
@@ -181,10 +203,17 @@
                 
                 <fieldset class="" style="width: 50%; float: left;">
                     <legend>
-                        <h1>Formulario: <span id="formulario-seleccionado"></span></h1>
+                        <h1>Formulario: <span id="formulario-seleccionado" style="color: cyan;"></span></h1>
                     </legend>
                     <div>
                         <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.abrirCrearCampo()">+</i>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
+                        <div style="overflow: scroll; max-width: 100%; min-height: 40%; max-height: 40%;">
+                            <ul id="lc-contenedor"></ul>
+                        </div>
                         <!-- <label for="campo-nombre">Especifica el nombre del campo:</label>
                         <input id="campo-nombre" type="text" name="campo-nombre">
                         <br>
@@ -212,15 +241,38 @@
                     <input id="campo-nombre" type="text">
                     <br><br>
                     <label>Selecciona el campo: </label>
-                    <select id="campo-val" name="campo-tipo">
+                    <select id="campo-val" name="campo-tipo" onchange="fm.cambiarTipoCampo()">
                         <option value="input">Input</option>
+                        <option value="select">Select</option>
                     </select> 
                     <br><br>
-                    <label>Selecciona el tipo de campo: </label>
-                    <select id="campo-tipo" name="campo-tipo">
-                        <option value="text">Texto</option>
-                        <option value="number">Número</option>
-                    </select> 
+
+                    <!-- INPUT -->
+                    <div id="input-tipo" style="display: table;">
+                        <label>Selecciona el tipo de campo: </label>
+                        <select name="campo-tipo">
+                            <option value="text">Texto</option>
+                            <option value="number">Número</option>
+                            <option value="email">Email</option>
+                            <option value="date">Fecha</option>
+                            <option value="submit">Submit</option>
+                        </select>
+                    </div>
+
+                    <!-- SELECT -->
+                    <div id="select-tipo" style="display: none;">
+                        <i style="float: left; margin-right: 10px;" class="btn-circle-select" onclick="fm.crearNuevaOpcion()">+</i>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
+                        <div id="select-contenedor-opciones">
+                            <div>
+                                <label>Opción: </label>
+                                <input class="select-opciones" type="text">
+                            </div>
+                        </div>
+                    </div>
                     <br><br>
                     <a class="btn btn-aceptar" onclick="fm.crearCampo()">Crear</a>
                     <a class="btn btn-cancelar" onclick="fm.cerrarModal('#modal-crear')">Cancelar</a>
@@ -286,6 +338,7 @@
 
             li.appendChild(texto);
             li.setAttribute('onclick', 'fm.seleccionarFormulario("' + nuevoFormulario +'")');
+            li.setAttribute('class', 'cursor');
             $('#lf-contenedor')[0].appendChild(li);
         }
 
@@ -298,19 +351,110 @@
             $('#modal-crear').css('display', 'block');
         }
 
-        fm.crearCampo = function () {
-            let _nombre = $('#campo-nombre').val();
-            let _campo = $('#campo-val').val();
-            let _tipo = $('#campo-tipo').val();
+        fm.mostrarCampoEnListado = function (nombre, tipo, atributo) {
+            //lc-contenedor
+            fm.formularios[fm.formularioSeleccionado][nombre] = {
+                tipo: tipo,
+                atributo: atributo
+            };
 
-            let label = document.createElement('label');
-            let label_texto = document.createTextNode(_nombre);
-            let campo = document.createElement(_campo);
+            let li = document.createElement('li');
+            let texto = document.createTextNode(nombre + ' [' + tipo + ']');
+            li.appendChild(texto);
+            li.setAttribute('onclick', 'fm.modificarCampo("' + nombre +'")');
+            li.setAttribute('class', 'cursor');
+            $('#lc-contenedor')[0].appendChild(li);
+        }
+
+        fm.crearCampo = function () {
+            let campo = $('#campo-val').val();
+            switch (campo) {
+                case 'input':
+                    fm.crearCampoInput();
+                    break;
+                case 'select':
+                    fm.crearCampoSelect()
+                    break;
+            }
+        }
+
+        fm.crearCampoInput = function () {
+            let _nombre = $('#campo-nombre').val();
+            let _campo  = $('#campo-val').val();
+            let _tipo   = $('#campo-tipo').val();
+
+            let label       = document.createElement('label');
+            let label_texto = document.createTextNode(_nombre + ': ');
+            let campo       = document.createElement(_campo);
             campo.setAttribute('type', _tipo);
 
+            // Muestra los campos en la vista
             label.appendChild(label_texto);
             $('#' + fm.formularioSeleccionado)[0].appendChild(label);
             $('#' + fm.formularioSeleccionado)[0].appendChild(campo);
+            $('#' + fm.formularioSeleccionado)[0].appendChild(document.createElement('br'));
+
+            // Guarda los campos en la variable de formularios
+            fm.mostrarCampoEnListado(_nombre, _campo, _tipo);
+        }
+
+        fm.crearCampoSelect = function () {
+            let _nombre  = $('#campo-nombre').val();
+            let _campo   = $('#campo-val').val();
+            let _options = $('.select-opciones');
+
+            let label  = document.createElement('label');
+            let select = document.createElement(_campo);
+
+            for (let i = 0; i < _options.length; i++) {
+                let value = $(_options[i]).val();
+                let option = document.createElement('option');
+                option.setAttribute('value', value);
+                option.appendChild(document.createTextNode(value));
+                select.appendChild(option);
+            }
+
+            // Muestra los campos en la vista
+            label.appendChild(document.createTextNode(_nombre + ': '));
+            $('#' + fm.formularioSeleccionado)[0].appendChild(label);
+            $('#' + fm.formularioSeleccionado)[0].appendChild(select);
+            $('#' + fm.formularioSeleccionado)[0].appendChild(document.createElement('br'));
+
+            // Guarda los campos en la variable de formularios
+            fm.mostrarCampoEnListado(_nombre, _campo, _options);
+        }
+
+        fm.cambiarTipoCampo = function () {
+            let campo = $('#campo-val').val();
+            fm.ocultarCampos();
+
+            switch (campo) {
+                case 'input':
+                    $('#input-tipo').css('display', 'table');
+                    break;
+                case 'select':
+                    $('#select-tipo').css('display', 'table');
+                    break;
+            }
+        }
+
+        fm.crearNuevaOpcion = function () {
+            let div = document.createElement('div');
+            let label = document.createElement('label');
+            let input = document.createElement('input');
+            
+            label.appendChild(document.createTextNode('Opción: '));
+            input.setAttribute('class', 'select-opciones');
+            input.setAttribute('type', 'text');
+
+            $('#select-contenedor-opciones')[0].appendChild(label);
+            $('#select-contenedor-opciones')[0].appendChild(input);
+            $('#select-contenedor-opciones')[0].appendChild(document.createElement('br'));
+        }
+
+        fm.ocultarCampos = function () {
+            $('#input-tipo').css('display', 'none');
+            $('#select-tipo').css('display', 'none');
         }
 
         fm.existeFormulario = function (nombre) {
