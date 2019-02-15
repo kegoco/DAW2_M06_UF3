@@ -180,6 +180,11 @@
             .cursor {
                 cursor: pointer;
             }
+
+            .campo-seleccionado {
+                background-color: white;
+                color: #2F4F4F;
+            }
         </style>
     </head>
 
@@ -207,6 +212,8 @@
                     </legend>
                     <div>
                         <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.abrirCrearCampo()">+</i>
+                        <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.abrirModificarCampo()">&#9670;</i>
+                        <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.borrarCampo()">&#8722;</i>
                         <br>
                         <br>
                         <br>
@@ -236,12 +243,12 @@
             <!-- MODAL DE CREAR -->
             <div id="modal-crear" class="modal">
                 <div class="modal-body">
-                    <h3 style="color: black;">CREAR CAMPO</h3>
+                    <h3 style="color: black;">CREAR/MODIFICAR CAMPO</h3>
                     <label>Introduce el nombre del campo: </label>
                     <input id="campo-nombre" type="text">
                     <br><br>
                     <label>Selecciona el campo: </label>
-                    <select id="campo-val" name="campo-tipo" onchange="fm.cambiarTipoCampo()">
+                    <select id="campo-val" onchange="fm.cambiarTipoCampo()">
                         <option value="input">Input</option>
                         <option value="select">Select</option>
                     </select> 
@@ -250,7 +257,7 @@
                     <!-- INPUT -->
                     <div id="input-tipo" style="display: table;">
                         <label>Selecciona el tipo de campo: </label>
-                        <select name="campo-tipo">
+                        <select id="campo-tipo">
                             <option value="text">Texto</option>
                             <option value="number">Número</option>
                             <option value="email">Email</option>
@@ -296,6 +303,8 @@
         fm.contenedorFormularios = undefined;
         fm.formularios = {};
         fm.formularioSeleccionado = '';
+        fm.modificarCampo = false;
+        fm.campoSeleccionado = '';
 
         function inicializar() {
             console.log('::: Aplicación inicializada :::');
@@ -344,26 +353,30 @@
 
         fm.seleccionarFormulario = function (formulario) {
             fm.formularioSeleccionado = formulario;
+            fm.campoSeleccionado = '';
             $('#formulario-seleccionado').text(formulario);
+            fm.mostrarCamposEnListado();
         }
 
         fm.abrirCrearCampo = function () {
+            fm.modificarCampo = false;
             $('#modal-crear').css('display', 'block');
         }
 
-        fm.mostrarCampoEnListado = function (nombre, tipo, atributo) {
-            //lc-contenedor
-            fm.formularios[fm.formularioSeleccionado][nombre] = {
-                tipo: tipo,
-                atributo: atributo
-            };
+        fm.mostrarCamposEnListado = function () {
+            $('#lc-contenedor').empty();
 
-            let li = document.createElement('li');
-            let texto = document.createTextNode(nombre + ' [' + tipo + ']');
-            li.appendChild(texto);
-            li.setAttribute('onclick', 'fm.modificarCampo("' + nombre +'")');
-            li.setAttribute('class', 'cursor');
-            $('#lc-contenedor')[0].appendChild(li);
+            for (let index in fm.formularios[fm.formularioSeleccionado]) {
+                let formVal = fm.formularios[fm.formularioSeleccionado][index];
+
+                let li = document.createElement('li');
+                let texto = document.createTextNode(index + ' [' + formVal.campo + ']');
+                li.appendChild(texto);
+                li.setAttribute('onclick', 'fm.seleccionarCampo("' + index +'")');
+                li.setAttribute('class', 'cursor ' + ((fm.campoSeleccionado == index) ? 'campo-seleccionado' : ''));
+                li.setAttribute('id', 'li-' + fm.formularioSeleccionado + index);
+                $('#lc-contenedor')[0].appendChild(li);
+            }
         }
 
         fm.crearCampo = function () {
@@ -376,6 +389,50 @@
                     fm.crearCampoSelect()
                     break;
             }
+
+            fm.generarElementos();
+            fm.limpiarCamposModal();
+            if (fm.modificarCampo) {
+                fm.cerrarModal('#modal-crear');
+                $('#campo-nombre')[0].setAttribute('readonly', false);
+                fm.modificarCampo = false;
+            }
+        }
+
+        fm.generarElementos = function () {
+            console.log(fm.formularios[fm.formularioSeleccionado]);
+            $('#' + fm.formularioSeleccionado).empty();
+
+            let title = document.createElement('h2');
+            title.appendChild(document.createTextNode(fm.formularioSeleccionado));
+            $('#' + fm.formularioSeleccionado)[0].appendChild(title);
+
+            for (let index in fm.formularios[fm.formularioSeleccionado]) {
+                let formVal = fm.formularios[fm.formularioSeleccionado][index];
+
+                let div = document.createElement('div');
+                div.setAttribute('id', fm.formularioSeleccionado + '_' + index);
+                let label       = document.createElement('label');
+                let label_texto = document.createTextNode(index + ': ');
+                label.appendChild(label_texto);
+                let campo       = document.createElement(formVal.campo);
+
+                if (formVal.tipo != undefined) campo.setAttribute('type', formVal.tipo);
+                if (formVal.opciones != undefined) {
+                    for (let i = 0; i < formVal.opciones.length; i++) {
+                        let value = formVal.opciones[i];
+                        let option = document.createElement('option');
+                        option.setAttribute('value', value);
+                        option.appendChild(document.createTextNode(value));
+                        campo.appendChild(option);
+                    }
+                }
+                div.appendChild(label);
+                div.appendChild(campo);
+                $('#' + fm.formularioSeleccionado)[0].appendChild(div);
+            }
+
+            fm.mostrarCamposEnListado();
         }
 
         fm.crearCampoInput = function () {
@@ -383,19 +440,10 @@
             let _campo  = $('#campo-val').val();
             let _tipo   = $('#campo-tipo').val();
 
-            let label       = document.createElement('label');
-            let label_texto = document.createTextNode(_nombre + ': ');
-            let campo       = document.createElement(_campo);
-            campo.setAttribute('type', _tipo);
-
-            // Muestra los campos en la vista
-            label.appendChild(label_texto);
-            $('#' + fm.formularioSeleccionado)[0].appendChild(label);
-            $('#' + fm.formularioSeleccionado)[0].appendChild(campo);
-            $('#' + fm.formularioSeleccionado)[0].appendChild(document.createElement('br'));
-
-            // Guarda los campos en la variable de formularios
-            fm.mostrarCampoEnListado(_nombre, _campo, _tipo);
+            fm.formularios[fm.formularioSeleccionado][_nombre] = {
+                campo: _campo,
+                tipo: _tipo
+            };
         }
 
         fm.crearCampoSelect = function () {
@@ -403,25 +451,16 @@
             let _campo   = $('#campo-val').val();
             let _options = $('.select-opciones');
 
-            let label  = document.createElement('label');
-            let select = document.createElement(_campo);
-
+            let opciones = [];
             for (let i = 0; i < _options.length; i++) {
                 let value = $(_options[i]).val();
-                let option = document.createElement('option');
-                option.setAttribute('value', value);
-                option.appendChild(document.createTextNode(value));
-                select.appendChild(option);
+                opciones.push(value);
             }
 
-            // Muestra los campos en la vista
-            label.appendChild(document.createTextNode(_nombre + ': '));
-            $('#' + fm.formularioSeleccionado)[0].appendChild(label);
-            $('#' + fm.formularioSeleccionado)[0].appendChild(select);
-            $('#' + fm.formularioSeleccionado)[0].appendChild(document.createElement('br'));
-
-            // Guarda los campos en la variable de formularios
-            fm.mostrarCampoEnListado(_nombre, _campo, _options);
+            fm.formularios[fm.formularioSeleccionado][_nombre] = {
+                campo: _campo,
+                opciones: opciones
+            };
         }
 
         fm.cambiarTipoCampo = function () {
@@ -452,6 +491,25 @@
             $('#select-contenedor-opciones')[0].appendChild(document.createElement('br'));
         }
 
+        fm.abrirModificarCampo = function () {
+            fm.modificarCampo = true;
+            $('#campo-nombre').val(fm.campoSeleccionado);
+            $('#campo-nombre')[0].setAttribute('readonly', true);
+            $('#modal-crear').css('display', 'block');
+        }
+
+        fm.seleccionarCampo = function (nombreCampo) {
+            $('#li-' + fm.formularioSeleccionado + campoSeleccionado).removeClass('campo-seleccionado');
+            fm.campoSeleccionado = nombreCampo;
+            $('#li-' + fm.formularioSeleccionado + campoSeleccionado).addClass('campo-seleccionado');
+        }
+
+        fm.borrarCampo = function () {
+            delete fm.formularios[fm.formularioSeleccionado][fm.campoSeleccionado];
+            fm.campoSeleccionado = '';
+            fm.generarElementos();
+        }
+
         fm.ocultarCampos = function () {
             $('#input-tipo').css('display', 'none');
             $('#select-tipo').css('display', 'none');
@@ -463,6 +521,12 @@
 
         fm.cerrarModal = function (idModal) {
             $(idModal).css('display', 'none');
+        }
+
+        fm.limpiarCamposModal = function () {
+            $('#campo-nombre').val('');
+            $('#select-contenedor-opciones').empty();
+            fm.crearNuevaOpcion();
         }
 
         inicializar();
