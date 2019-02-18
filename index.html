@@ -234,8 +234,16 @@
                     <legend>
                         <h1>Formularios creados</h1>
                     </legend>
-                    <div style="overflow: scroll; max-width: 100%; min-height: 60%; max-height: 60%;">
-                        <ul id="lf-contenedor"></ul>
+                    <div>
+                        <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.abrirModalModificarForm()">&#9670;</i>
+                        <i style="float: left; margin-right: 10px;" class="btn-circle" onclick="fm.borrarFormulario()">&#8722;</i>
+                        <br>
+                        <br>
+                        <br>
+                        <br>
+                        <div style="overflow: scroll; max-width: 100%; min-height: 40%; max-height: 40%;">
+                            <ul id="lf-contenedor"></ul>
+                        </div>
                     </div>
                 </fieldset>
             </div>
@@ -264,6 +272,18 @@
                             <option value="date">Fecha</option>
                             <option value="submit">Submit</option>
                         </select>
+
+                        <div>
+                            <br>
+                            <label>Longitud mínima: </label>
+                            <input type="number" value="1">
+                        </div>
+                        
+                        <div>
+                            <br>
+                            <label>Longitud mínima: </label>
+                            <input type="number" value="1">
+                        </div>
                     </div>
 
                     <!-- SELECT -->
@@ -283,6 +303,17 @@
                     <br><br>
                     <a class="btn btn-aceptar" onclick="fm.crearCampo()">Crear</a>
                     <a class="btn btn-cancelar" onclick="fm.cerrarModal('#modal-crear')">Cancelar</a>
+                </div>
+            </div>
+
+            <!-- MODAL DE MODIFICAR FORMULARIO -->
+            <div id="modal-modificar-form" class="modal">
+                <div class="modal-body">
+                    <h3 style="color: black;">MODIFICAR FORMULARIO</h3>
+                    <input id="modificar-formulario" type="text">
+                    <br><br>
+                    <a class="btn btn-aceptar" onclick="fm.modificarFormulario()">Modificar</a>
+                    <a class="btn btn-cancelar" onclick="fm.cerrarModal('#modal-modificar-form')">Cancelar</a>
                 </div>
             </div>
 
@@ -315,19 +346,7 @@
             let cfNombre = $('#cf-nombre').val();
             if (fm.existeFormulario(cfNombre) == false && cfNombre != '') {
                 // Exito
-                let div   = document.createElement('div');
-                let h2    = document.createElement('h2');
-                let texto = document.createTextNode(cfNombre);
-
-                div.setAttribute('id', cfNombre);
-                div.setAttribute('class', 'grupo-formulario');
-                h2.appendChild(texto);
-                div.appendChild(h2);
-                fm.contenedorFormularios.appendChild(div);
-
-                fm.formularios[cfNombre] = {};
-                fm.incrementarListado(cfNombre);
-                console.log(fm.formularios);
+                fm.generarFormulario(cfNombre);
             }
             else if (cfNombre == '') {
                 // Error
@@ -341,17 +360,89 @@
             }
         }
 
-        fm.incrementarListado = function (nuevoFormulario) {
-            let li = document.createElement('li');
-            let texto = document.createTextNode(nuevoFormulario);
+        fm.generarFormulario = function (nombre) {
+            let div   = document.createElement('div');
+            let h2    = document.createElement('h2');
+            let texto = document.createTextNode(nombre);
 
-            li.appendChild(texto);
-            li.setAttribute('onclick', 'fm.seleccionarFormulario("' + nuevoFormulario +'")');
-            li.setAttribute('class', 'cursor');
-            $('#lf-contenedor')[0].appendChild(li);
+            div.setAttribute('id', nombre);
+            div.setAttribute('class', 'grupo-formulario');
+            h2.appendChild(texto);
+            div.appendChild(h2);
+            fm.contenedorFormularios.appendChild(div);
+
+            fm.formularios[nombre] = {};
+            fm.crearListadoFormularios(nombre);
+        }
+
+        fm.abrirModalModificarForm = function () {
+            $('#modificar-formulario').val(fm.formularioSeleccionado);
+            $('#modal-modificar-form').css('display', 'block');
+        }
+
+        fm.modificarFormulario = function () {
+            let nuevoNombre = $('#modificar-formulario').val();
+            if (fm.existeFormulario(nuevoNombre) == false && nuevoNombre != '') {
+                // Copia los campos y borra el formulario:
+                let copia = fm.formularios[fm.formularioSeleccionado];
+                delete fm.formularios[fm.formularioSeleccionado];
+                $('#' + fm.formularioSeleccionado).remove();
+
+                // Genera de nuevo el formulario y le añade los campos que tenía anteriormente:
+                fm.generarFormulario(nuevoNombre);
+                fm.formularioSeleccionado = nuevoNombre;
+                fm.formularios[fm.formularioSeleccionado] = copia;
+                fm.generarElementos();
+                $('#modal-modificar-form').css('display', 'none');
+            }
+            else if (nuevoNombre == '') {
+                // Error
+                $('#mensaje-error').text('Para modificar un formulario hay que especificar un nombre válido.');
+                $('#modal').css('display', 'block');
+            }
+            else {
+                // Error
+                $('#mensaje-error').text('Ya existe un formulario llamado: ' + nuevoNombre + '.');
+                $('#modal').css('display', 'block');
+            }
+        }
+
+        fm.borrarFormulario = function () {
+            delete fm.formularios[fm.formularioSeleccionado];
+
+            // Borra el formulario de la vista:
+            $('#' + fm.formularioSeleccionado).remove();
+
+            // Borra el contenedor de campos:
+            $('#lc-contenedor').empty();
+
+            // Genera la nueva lista de formularios:
+            fm.crearListadoFormularios();
+
+            fm.formularioSeleccionado = '';
+        }
+
+        fm.crearListadoFormularios = function () {
+            $('#lf-contenedor').empty();
+            for (let index in fm.formularios) {
+                // index = nombre del formulario
+                let li = document.createElement('li');
+                let texto = document.createTextNode(index);
+
+                li.appendChild(texto);
+                li.setAttribute('onclick', 'fm.seleccionarFormulario("' + index +'")');
+                li.setAttribute('class', 'cursor');
+                li.setAttribute('id', 'lf-' + index);
+                $('#lf-contenedor')[0].appendChild(li);
+            }
         }
 
         fm.seleccionarFormulario = function (formulario) {
+            // Aplica el estilo:
+            $('#lf-' + fm.formularioSeleccionado).removeClass('campo-seleccionado');
+            $('#lf-' + formulario).addClass('campo-seleccionado');
+
+            // Selecciona el nuevo formulario:
             fm.formularioSeleccionado = formulario;
             fm.campoSeleccionado = '';
             $('#formulario-seleccionado').text(formulario);
