@@ -1,0 +1,176 @@
+.contenedor-general {
+    margin: 0 auto;
+    width: 100%;
+    margin-bottom: 20%;
+}
+
+.contenedor-creador {
+    background-color: #2F4F4F;
+    width: 100%;
+    height: 25%;
+    position: fixed;
+    bottom: 0;
+    padding: 1%;
+}
+
+h1 {
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+h2 {
+    color: black;
+    font-size: 20px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+h3 {
+    color: white;
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+h4 {
+    color: white;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.btn {
+    padding: 1%;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 5px;
+    border: 1px solid lightslategray;
+}
+
+.btn-circle {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+.btn-circle:active {
+    background-color: #6495ED;
+    color: white;
+}
+
+.btn-circle-select {
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    background-color: #4c7777;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    font-size: 20px;
+    cursor: pointer;
+    user-select: none;
+}
+.btn-circle-select:active {
+    background-color: #2F4F4F;
+    color: white;
+}
+
+.btn-aceptar {
+    background-color: #4c7777;
+    color: white;
+}
+.btn-aceptar:active {
+    background-color: #2F4F4F;
+}
+
+.btn-cancelar {
+    background-color: rgb(211, 62, 62);
+    color: white;
+}
+.btn-cancelar:active {
+    background-color: rgb(230, 19, 19);
+}
+
+.contenedor-formularios {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 1%;
+}
+
+.grupo-formulario {
+    width: 200px;
+    height: 200px;
+    box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+    margin-right: 15px;
+    margin-bottom: 15px;
+}
+
+/* MODAL */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    padding-top: 100px; /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+.modal-body {
+    background-color: #fefefe;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+}
+
+fieldset { 
+    border:1px solid white;
+}
+
+legend {
+    padding: 1%;
+    color:white;
+    font-size: 90%;
+    text-align: left;
+    margin-left: 10px;
+}
+
+/* GRIDS FOOTER */
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    padding: 1%;
+}
+.grid-item {
+    padding: 2%;
+    font-size: 30px;
+}
+
+ul {
+    list-style-type: decimal;
+    color: white;
+    font-size: 16px;
+}
+
+label {
+    font-size: 16px;
+}
+
+.cursor {
+    cursor: pointer;
+}
+
+.campo-seleccionado {
+    background-color: white;
+    color: #2F4F4F;
+}
